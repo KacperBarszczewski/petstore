@@ -14,6 +14,8 @@
             <th class="px-4 py-3">Status</th>
             <th class="px-4 py-3">Kategoria</th>
             <th class="px-4 py-3">Tag</th>
+            <th class="px-4 py-3">Edytuj</th>
+            <th class="px-4 py-3">Usuń</th>
         </tr>
     </thead>
     <tbody>
@@ -34,6 +36,18 @@
                     @foreach ($pet->tags as $tag)
                         {{ $tag->name }}
                     @endforeach
+                </td>
+                <td>
+                    Edytuj
+                </td>
+                <td class="px-4 py-2">
+                    <!-- Formularz usuwania -->
+                    <form action="{{ route('pets.delete', $pet->id) }}" method="POST"
+                        onsubmit="return confirm('Napewno chcesz usunąć zwierze?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="bg-red-400 hover:bg-red-500 text-white px-4 py-2 rounded">Usuń</button>
+                    </form>
                 </td>
             </tr>
         @endforeach

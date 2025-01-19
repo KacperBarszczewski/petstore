@@ -55,4 +55,18 @@ class PetController extends Controller
     {
         return view('pets.create');
     }
+
+    public function delete($id)
+    {
+        $response = Http::withHeaders([
+            'api_key' => 'special-key',
+        ])->delete('https://petstore.swagger.io/v2/pet/' . $id);
+
+
+        if ($response->successful()) {
+            return redirect()->route('pets.index')->with('success', 'Pet deleted successfully.');
+        } else {
+            return redirect()->route('pets.index')->with('error', 'Failed to delete pet.');
+        }
+    }
 }
