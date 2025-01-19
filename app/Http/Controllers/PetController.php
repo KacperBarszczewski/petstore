@@ -7,7 +7,8 @@ use App\Models\Pet;
 use App\Enums\PetStatus;
 use App\Models\Category;
 use App\Models\Tag;
-use App\Http\Requests\StorePetRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class PetController extends Controller
 {
@@ -86,12 +87,28 @@ class PetController extends Controller
         }
     }
 
-    public function store(StorePetRequest $request)
+    public function store(Request $request)
     {
-        \Log::info('Store method called');
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'photoUrls' => 'required|array',
+            'photoUrls.*' => 'required|string',
+            'id' => 'nullable|integer',
+            'category.id' => 'nullable|integer',
+            'category.name' => 'nullable|string|max:255',
+            'tags' => 'nullable|array',
+            'tags.*.id' => 'nullable|integer',
+            'tags.*.name' => 'nullable|string|max:255',
+            'status' => 'nullable|string|in:available,pending,sold',
+        ]);
 
-        dd($request);
-        $validated = $request->validated();
+        if ($validator->fails()) {
+            return redirect()->route('pets.create')
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        $validated = $validator->validated();
 
         $data = [
             'id' => $validated['id'] ?? null,
@@ -110,7 +127,6 @@ class PetController extends Controller
             'status' => $validated['status'] ?? null,
         ];
 
-
         $response = Http::withHeaders([
             'api_key' => config('services.petstore.api_key'),
             'accept' => 'application/json',
@@ -118,21 +134,9 @@ class PetController extends Controller
         ])->post('https://petstore.swagger.io/v2/pet', $data);
 
 
-        dd($response);
-
-        if ($response->status() == 302) {
-            // Log the redirect URL
-            \Log::info('Redirect URL: ' . $response->header('Location'));
-        }
-
         if ($response->successful()) {
             return redirect()->route('pets.index')->with('success', 'Pet created successfully.');
         }
-
-        \Log::error('Failed to create pet', [
-            'data' => $data,
-            'response' => $response->body(),
-        ]);
 
         return redirect()->route('pets.index')->with('error', 'Failed to create pet. Please try again.');
     }

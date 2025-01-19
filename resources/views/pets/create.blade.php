@@ -10,17 +10,22 @@
 
     <div>
         <label for="name" class="block text-sm font-medium text-gray-700">Imie*</label>
-        <input type="text" name="name" id="name" value="{{ old('name') }}" required
+        <input type="text" name="name" id="name" value="{{ old('name') }}"
             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2"
             placeholder="Wisz imie zwierzecia">
+        @error('name')
+            <div class="text-red-500 text-sm">{{ $message }}</div>
+        @enderror
     </div>
-
 
     <div>
         <label for="photoUrls" class="block text-sm font-medium text-gray-700">Zdjęcia</label>
-        <textarea name="photoUrls[]" id="photoUrls" rows="3" required
+        <textarea name="photoUrls[]" id="photoUrls" rows="3"
             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2"
             placeholder="Dodaj zdjęcia">{{ old('photoUrls.0') }}</textarea>
+        @error('photoUrls.*')
+            <div class="text-red-500 text-sm">{{ $message }}</div>
+        @enderror
     </div>
 
     <div>
@@ -28,6 +33,9 @@
         <input type="number" name="category[id]" id="category_id" value="{{ old('category.id') }}"
             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2"
             placeholder="Wpisz ID">
+        @error('category.id')
+            <div class="text-red-500 text-sm">{{ $message }}</div>
+        @enderror
     </div>
 
     <div>
@@ -35,6 +43,9 @@
         <input type="text" name="category[name]" id="category_name" value="{{ old('category.name') }}"
             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2"
             placeholder="wpisz kategorie">
+        @error('category.name')
+            <div class="text-red-500 text-sm">{{ $message }}</div>
+        @enderror
     </div>
 
     <div>
@@ -42,6 +53,9 @@
         <textarea name="tags[0][name]" id="tags" rows="1"
             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2"
             placeholder="wpisz tag">{{ old('tags.0.name') }}</textarea>
+        @error('tags.*.name')
+            <div class="text-red-500 text-sm">{{ $message }}</div>
+        @enderror
     </div>
 
     <div>
@@ -52,6 +66,9 @@
             <option value="pending" {{ old('status') === 'pending' ? 'selected' : '' }}>Pending</option>
             <option value="sold" {{ old('status') === 'sold' ? 'selected' : '' }}>Sold</option>
         </select>
+        @error('status')
+            <div class="text-red-500 text-sm">{{ $message }}</div>
+        @enderror
     </div>
 
     <div>
