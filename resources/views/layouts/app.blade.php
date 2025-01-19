@@ -30,8 +30,9 @@
             </div>
             <div class="text-lg font-bold justify-center">
                 <a href="https://github.com/KacperBarszczewski" target="_blank" rel="noopener noreferrer"
-                    class="hover:underline">Kacper
-                    Barszczewski</a>
+                    class="hover:underline">
+                    Kacper Barszczewski
+                </a>
             </div>
             <div class="justify-end">
                 <a href="" class="hover:underline">Dodaj zwierzaka</a>
@@ -41,8 +42,9 @@
     </header>
 
     <div class="flex-grow flex flex-col items-center justify-center">
-        <h1 class="text-4xl font-bold text-gray-800">Welcome to Laravel</h1>
-        <p class="text-lg mt-4">This is a Laravel application with Vite.js</p>
+        <!-- <h1 class="text-4xl font-bold text-gray-800">Welcome to Laravel</h1>
+        <p class="text-lg mt-4">This is a Laravel application with Vite.js</p> -->
+        @yield('content')
     </div>
 
     <footer class="p-4 bg-gray-200 font-semibold text-center">
