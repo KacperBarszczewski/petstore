@@ -20,7 +20,8 @@
     </thead>
     <tbody>
         @foreach ($pets as $pet)
-            <tr class="hover:bg-gray-100 hover:cursor-pointer border-b border-gray-300" onclick="window.location='{{ route('pets.show', $pet->id) }}'">
+            <tr class="hover:bg-gray-100 hover:cursor-pointer border-b border-gray-300"
+                onclick="window.location='{{ route('pets.show', $pet->id) }}'">
                 <td class="px-4 py-2 ">{{ $pet->id}}</td>
                 <td class="px-4 py-2 ">
                     @if(!empty($pet->photoUrls) && isset($pet->photoUrls[0]))
@@ -50,7 +51,10 @@
                         onsubmit="return confirm('Napewno chcesz usunąć zwierze?')">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="bg-red-400 hover:bg-red-500 text-white px-4 py-2 rounded">Usuń</button>
+                        <button type="submit" class="bg-red-400 hover:bg-red-500 text-white px-4 py-2 rounded"
+                            onclick="event.stopPropagation()">
+                            Usuń
+                        </button>
                     </form>
                 </td>
             </tr>
