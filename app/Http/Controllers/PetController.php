@@ -17,11 +17,16 @@ class PetController extends Controller
             'status' => 'available',
         ]);
 
+        if (!$response->successful()) {
+            return redirect()->route('pets.index')->with('error', 'Failed to fetch pets from API.');
+        }
+
         $petsData = $response->json();
 
         if (!is_array($petsData)) {
-            return view('error');
+            return redirect()->route('pets.index')->with('error', 'Failed to fetch pets data from the API.');
         }
+
 
         $pets = collect($petsData)->map(function ($data) {
             $category = isset($data['category']) ? new Category(
@@ -58,15 +63,27 @@ class PetController extends Controller
 
     public function delete($id)
     {
+        if (!ctype_digit($id)) {
+            return redirect()->route('pets.index')->with('error', 'Invalid pet ID provided.');
+        }
+
         $response = Http::withHeaders([
-            'api_key' => 'special-key',
+            'api_key' => config('services.petstore.api_key'),
         ])->delete("https://petstore.swagger.io/v2/pet/{$id}");
 
-
         if ($response->successful()) {
-            return redirect()->route('pets.index')->with('success', 'Pet deleted successfully.');
+            return redirect()->route('pets.index')->with('success', "Pet with ID {$id} deleted successfully.");
+        } elseif ($response->status() === 404) {
+            return redirect()->route('pets.index')->with('error', "Pet with ID {$id} not found.");
+        } elseif ($response->status() === 400) {
+            return redirect()->route('pets.index')->with('error', "Invalid pet ID: {$id}.");
         } else {
-            return redirect()->route('pets.index')->with('error', 'Failed to delete pet.');
+            \Log::error('Failed to delete pet', [
+                'id' => $id,
+                'response' => $response->body(),
+            ]);
+            return redirect()->route('pets.index')->with('error', 'Failed to delete pet due to an unexpected error.');
         }
     }
+
 }
