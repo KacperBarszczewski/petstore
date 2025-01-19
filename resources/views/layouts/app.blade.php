@@ -26,7 +26,7 @@
         <nav
             class="flex flex-row p-4 bg-gray-200 font-semibold  items-center justify-center  *:basis-1/3 *:flex *:items-center">
             <div class="justify-start">
-                <a href="" class="hover:underline">Lista</a>
+                <a href="{{route('pets.index')}}" class="hover:underline">Lista</a>
             </div>
             <div class="text-lg font-bold justify-center">
                 <a href="https://github.com/KacperBarszczewski" target="_blank" rel="noopener noreferrer"
@@ -35,7 +35,7 @@
                 </a>
             </div>
             <div class="justify-end">
-                <a href="" class="hover:underline">Dodaj zwierzaka</a>
+                <a href="{{route('pets.create')}}" class="hover:underline rounded-full bg-green-300 p-3 hover:bg-green-400">Dodaj zwierzaka</a>
             </div>
 
         </nav>
