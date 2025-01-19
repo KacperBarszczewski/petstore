@@ -17,15 +17,16 @@
         @enderror
     </div>
 
-    <div>
+    <div id="photo-urls-container">
         <label for="photoUrls" class="block text-sm font-medium text-gray-700">Zdjęcia</label>
-        <textarea name="photoUrls[]" id="photoUrls" rows="3"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2"
-            placeholder="Dodaj zdjęcia">{{ old('photoUrls.0', $pet->photoUrls[0] ?? '') }}</textarea>
-        @error('photoUrls.*')
-            <div class="text-red-500 text-sm">{{ $message }}</div>
-        @enderror
+        @foreach($pet->photoUrls as $index => $photoUrl)
+            <input type="text" name="photoUrls[{{ $index }}]" value="{{ old('photoUrls.' . $index, $photoUrl) }}"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2"
+                placeholder="Wpisz URL zdjęcia">
+        @endforeach
     </div>
+    <button type="button" id="add-photo" class="text-blue-500 mt-2">Dodaj kolejne zdjęcie</button>
+
 
     <div>
         <label for="category_name" class="block text-sm font-medium text-gray-700">Kategoria</label>
