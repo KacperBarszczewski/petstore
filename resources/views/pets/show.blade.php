@@ -9,7 +9,7 @@
         <p><strong>Zdjęcia:</strong></p>
         <div class="grid grid-cols-3 gap-4">
             @foreach($pet->photoUrls as $url)
-                <img src="{{ $url }}" alt="Pet photo" class="w-full h-auto rounded-md shadow-md">
+                <img src="{{ $url }}" alt="Pet photo" class="w-full h-64 rounded-md shadow-md">
             @endforeach
         </div>
     @endif
