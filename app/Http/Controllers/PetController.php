@@ -14,47 +14,25 @@ class PetController extends Controller
 {
     public function index()
     {
-        $response = Http::get('https://petstore.swagger.io/v2/pet/findByStatus', [
-            'status' => 'available',
-        ]);
+        try {
+            $response = Http::get('https://petstore.swagger.io/v2/pet/findByStatus', [
+                'status' => 'available',
+            ]);
 
-        if (!$response->successful()) {
+            $response->throw();
+
+            $petsData = $response->json();
+            if (!is_array($petsData)) {
+                return redirect()->route('pets.index')->with('error', 'Failed to fetch pets data from the API.');
+            }
+
+            $pets = collect($petsData)->map(fn($data) => $this->mapPetData($data));
+
+            return view('pets.index', compact('pets'));
+
+        } catch (\Exception $e) {
             return redirect()->route('pets.index')->with('error', 'Failed to fetch pets from API.');
         }
-
-        $petsData = $response->json();
-
-        if (!is_array($petsData)) {
-            return redirect()->route('pets.index')->with('error', 'Failed to fetch pets data from the API.');
-        }
-
-
-        $pets = collect($petsData)->map(function ($data) {
-            $category = isset($data['category']) ? new Category(
-                id: $data['category']['id'] ?? null,
-                name: $data['category']['name'] ?? null
-            ) : null;
-
-            $tags = isset($data['tags']) ? collect($data['tags'])->map(function ($tag) {
-                return new Tag(
-                    id: $tag['id'] ?? null,
-                    name: $tag['name'] ?? null
-                );
-            })->toArray() : [];
-
-            $status = isset($data['status']) ? PetStatus::tryFrom($data['status']) : null;
-
-            return new Pet(
-                name: $data['name'] ?? '',
-                photoUrls: $data['photoUrls'] ?? [],
-                id: $data['id'] ?? null,
-                category: $category,
-                tags: $tags,
-                status: $status
-            );
-        });
-
-        return view('pets.index', compact('pets'));
     }
 
     public function create()
@@ -68,21 +46,18 @@ class PetController extends Controller
             return redirect()->route('pets.index')->with('error', 'Invalid pet ID provided.');
         }
 
-        $response = Http::withHeaders([
-            'api_key' => config('services.petstore.api_key'),
-        ])->delete("https://petstore.swagger.io/v2/pet/{$id}");
+        try {
+            $response = Http::withHeaders([
+                'api_key' => config('services.petstore.api_key'),
+            ])->delete("https://petstore.swagger.io/v2/pet/{$id}");
 
-        if ($response->successful()) {
-            return redirect()->route('pets.index')->with('success', "Pet with ID {$id} deleted successfully.");
-        } elseif ($response->status() === 404) {
-            return redirect()->route('pets.index')->with('error', "Pet with ID {$id} not found.");
-        } elseif ($response->status() === 400) {
-            return redirect()->route('pets.index')->with('error', "Invalid pet ID: {$id}.");
-        } else {
-            \Log::error('Failed to delete pet', [
-                'id' => $id,
-                'response' => $response->body(),
-            ]);
+            if ($response->successful()) {
+                return redirect()->route('pets.index')->with('success', "Pet with ID {$id} deleted successfully.");
+            } else {
+                $this->handleApiError($response);
+            }
+
+        } catch (\Exception $e) {
             return redirect()->route('pets.index')->with('error', 'Failed to delete pet due to an unexpected error.');
         }
     }
@@ -110,83 +85,53 @@ class PetController extends Controller
 
         $validated = $validator->validated();
 
-        $data = [
-            'id' => $validated['id'] ?? null,
-            'name' => $validated['name'],
-            'photoUrls' => $validated['photoUrls'],
-            'category' => [
-                'id' => $validated['category']['id'] ?? null,
-                'name' => $validated['category']['name'] ?? null,
-            ],
-            'tags' => array_map(function ($tag) {
-                return [
-                    'id' => $tag['id'] ?? null,
-                    'name' => $tag['name'] ?? null,
-                ];
-            }, $validated['tags'] ?? []),
-            'status' => $validated['status'] ?? null,
-        ];
+        $data = $this->preparePetDataForApi($validated);
 
-        $response = Http::withHeaders([
-            'api_key' => config('services.petstore.api_key'),
-            'accept' => 'application/json',
-            'Content-Type' => 'application/json',
-        ])->post('https://petstore.swagger.io/v2/pet', $data);
+        try {
+            $response = Http::withHeaders([
+                'api_key' => config('services.petstore.api_key'),
+                'accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ])->post('https://petstore.swagger.io/v2/pet', $data);
 
+            if ($response->successful()) {
+                return redirect()->route('pets.index')->with('success', 'Pet created successfully.');
+            }
 
-        if ($response->successful()) {
-            return redirect()->route('pets.index')->with('success', 'Pet created successfully.');
+            $this->handleApiError($response);
+
+        } catch (\Exception $e) {
+            return redirect()->route('pets.index')->with('error', 'Failed to create pet. Please try again.');
         }
-
-        return redirect()->route('pets.index')->with('error', 'Failed to create pet. Please try again.');
     }
 
 
     public function edit($id)
     {
         if (!ctype_digit($id)) {
-            return redirect()->route('pets.index')->with('error', 'Nieprawidłowe ID zwierzęcia.');
+            return redirect()->route('pets.index')->with('error', 'Invalid pet ID provided.');
         }
 
-        $response = Http::get("https://petstore.swagger.io/v2/pet/{$id}");
+        try {
+            $response = Http::get("https://petstore.swagger.io/v2/pet/{$id}");
 
-        if (!$response->successful()) {
-            return redirect()->route('pets.index')->with('error', 'Nie udało się pobrać danych zwierzęcia.');
+            $response->throw();
+
+            $petData = $response->json();
+            $pet = $this->mapPetData($petData);
+
+            return view('pets.edit', compact('pet'));
+
+        } catch (\Exception $e) {
+            return redirect()->route('pets.index')->with('error', 'Failed to fetch pet data for editing.');
         }
-
-        $petData = $response->json();
-
-        $category = isset($petData['category']) ? new Category(
-            id: $petData['category']['id'] ?? null,
-            name: $petData['category']['name'] ?? null
-        ) : null;
-
-        $tags = isset($petData['tags']) ? collect($petData['tags'])->map(function ($tag) {
-            return new Tag(
-                id: $tag['id'] ?? null,
-                name: $tag['name'] ?? null
-            );
-        })->toArray() : [];
-
-        $status = isset($petData['status']) ? PetStatus::tryFrom($petData['status']) : null;
-
-        $pet = new Pet(
-            name: $petData['name'] ?? '',
-            photoUrls: $petData['photoUrls'] ?? [],
-            id: $petData['id'] ?? null,
-            category: $category,
-            tags: $tags,
-            status: $status
-        );
-
-        return view('pets.edit', compact('pet'));
     }
 
 
     public function update(Request $request, $id)
     {
         if (!ctype_digit($id)) {
-            return redirect()->route('pets.index')->with('error', 'Nieprawidłowe ID zwierzęcia.');
+            return redirect()->route('pets.index')->with('error', 'Invalid pet ID provided.');
         }
 
         $validator = Validator::make($request->all(), [
@@ -208,82 +153,102 @@ class PetController extends Controller
 
         $validated = $validator->validated();
 
-        $data = [
-            'id' => $id,
-            'name' => $validated['name'],
-            'photoUrls' => $validated['photoUrls'],
-            'category' => [
-                'id' => $validated['category']['id'] ?? null,
-                'name' => $validated['category']['name'] ?? null,
-            ],
-            'tags' => array_map(function ($tag) {
-                return [
-                    'name' => $tag['name'] ?? null,
-                ];
-            }, $validated['tags'] ?? []),
-            'status' => $validated['status'] ?? null,
-        ];
+        $data = $this->preparePetDataForApi($validated);
+        $data['id'] = $id;
 
-        $response = Http::withHeaders([
-            'api_key' => config('services.petstore.api_key'),
-            'accept' => 'application/json',
-            'Content-Type' => 'application/json',
-        ])->put("https://petstore.swagger.io/v2/pet", $data);
+        try {
+            $response = Http::withHeaders([
+                'api_key' => config('services.petstore.api_key'),
+                'accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ])->put("https://petstore.swagger.io/v2/pet", $data);
 
-        if ($response->successful()) {
-            return redirect()->route('pets.index')->with('success', 'Zwierzę zostało zaktualizowane.');
+            if ($response->successful()) {
+                return redirect()->route('pets.index')->with('success', 'Pet updated successfully.');
+            }
+
+            $this->handleApiError($response);
+
+        } catch (\Exception $e) {
+            return redirect()->route('pets.index')->with('error', 'Failed to update pet. Please try again.');
         }
-
-        return redirect()->route('pets.index')->with('error', 'Nie udało się zaktualizować zwierzęcia. Spróbuj ponownie.');
     }
 
     public function show($id)
     {
-
         if (!ctype_digit($id)) {
-            return redirect()->route('pets.index')->with('error', 'Nieprawidłowe ID zwierzęcia.');
+            return redirect()->route('pets.index')->with('error', 'Invalid pet ID provided.');
         }
 
+        try {
+            $response = Http::get("https://petstore.swagger.io/v2/pet/{$id}");
 
-        $response = Http::get("https://petstore.swagger.io/v2/pet/{$id}");
+            $response->throw();
 
+            $petData = $response->json();
+            $pet = $this->mapPetData($petData);
 
-        if (!$response->successful()) {
-            return redirect()->route('pets.index')->with('error', 'Nie udało się pobrać danych zwierzęcia.');
+            return view('pets.show', compact('pet'));
+
+        } catch (\Exception $e) {
+            return redirect()->route('pets.index')->with('error', 'Failed to fetch pet data.');
         }
+    }
 
-
-        $petData = $response->json();
-
-
-        $category = isset($petData['category']) ? new Category(
-            id: $petData['category']['id'] ?? null,
-            name: $petData['category']['name'] ?? null
+    //////////////////
+    private function mapPetData($data)
+    {
+        $category = isset($data['category']) ? new Category(
+            id: $data['category']['id'] ?? null,
+            name: $data['category']['name'] ?? null
         ) : null;
 
-        $tags = isset($petData['tags']) ? collect($petData['tags'])->map(function ($tag) {
+        $tags = isset($data['tags']) ? collect($data['tags'])->map(function ($tag) {
             return new Tag(
                 id: $tag['id'] ?? null,
                 name: $tag['name'] ?? null
             );
         })->toArray() : [];
 
+        $status = isset($data['status']) ? PetStatus::tryFrom($data['status']) : null;
 
-        $status = isset($petData['status']) ? PetStatus::tryFrom($petData['status']) : null;
-
-
-        $pet = new Pet(
-            name: $petData['name'] ?? '',
-            photoUrls: $petData['photoUrls'] ?? [],
-            id: $petData['id'] ?? null,
+        return new Pet(
+            name: $data['name'] ?? '',
+            photoUrls: $data['photoUrls'] ?? [],
+            id: $data['id'] ?? null,
             category: $category,
             tags: $tags,
             status: $status
         );
-
-
-        return view('pets.show', compact('pet'));
     }
 
+    private function handleApiError($response)
+    {
+        if ($response->status() === 404) {
+            return redirect()->route('pets.index')->with('error', 'Pet not found.');
+        } elseif ($response->status() === 400) {
+            return redirect()->route('pets.index')->with('error', 'Invalid pet data.');
+        } else {
+            return redirect()->route('pets.index')->with('error', 'An unexpected error occurred.');
+        }
+    }
+
+    private function preparePetDataForApi($validated)
+    {
+        return [
+            'id' => $validated['id'] ?? null,
+            'name' => $validated['name'],
+            'photoUrls' => $validated['photoUrls'],
+            'category' => [
+                'id' => $validated['category']['id'] ?? null,
+                'name' => $validated['category']['name'] ?? null,
+            ],
+            'tags' => array_map(fn($tag) => [
+                'id' => $tag['id'] ?? null,
+                'name' => $tag['name'] ?? null,
+            ], $validated['tags'] ?? []),
+            'status' => $validated['status'] ?? null,
+        ];
+    }
 
 }
