@@ -26,13 +26,15 @@
         <nav
             class="flex flex-row p-4 bg-gray-200 font-semibold  items-center justify-center  *:basis-1/3 *:flex *:items-center">
             <div class="justify-start">
-                <a href="">Lista</a>
+                <a href="" class="hover:underline">Lista</a>
             </div>
             <div class="text-lg font-bold justify-center">
-                <a href="https://github.com/KacperBarszczewski" target="_blank" rel="noopener noreferrer">Kacper Barszczewski</a>
+                <a href="https://github.com/KacperBarszczewski" target="_blank" rel="noopener noreferrer"
+                    class="hover:underline">Kacper
+                    Barszczewski</a>
             </div>
             <div class="justify-end">
-                <a href="">Dodaj zwierzaka</a>
+                <a href="" class="hover:underline">Dodaj zwierzaka</a>
             </div>
 
         </nav>
@@ -44,7 +46,9 @@
     </div>
 
     <footer class="p-4 bg-gray-200 font-semibold text-center">
-        <a href="https://github.com/KacperBarszczewski" target="_blank" rel="noopener noreferrer">&copy; Kacper Barszczewski</a>
+        <a href="https://github.com/KacperBarszczewski" target="_blank" rel="noopener noreferrer">
+            &copy; Kacper Barszczewski
+        </a>
     </footer>
 
 </body>
