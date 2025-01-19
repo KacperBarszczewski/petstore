@@ -7,7 +7,7 @@ use App\Models\Pet;
 use App\Enums\PetStatus;
 use App\Models\Category;
 use App\Models\Tag;
-
+use App\Http\Requests\StorePetRequest;
 
 class PetController extends Controller
 {
@@ -84,6 +84,57 @@ class PetController extends Controller
             ]);
             return redirect()->route('pets.index')->with('error', 'Failed to delete pet due to an unexpected error.');
         }
+    }
+
+    public function store(StorePetRequest $request)
+    {
+        \Log::info('Store method called');
+
+        dd($request);
+        $validated = $request->validated();
+
+        $data = [
+            'id' => $validated['id'] ?? null,
+            'name' => $validated['name'],
+            'photoUrls' => $validated['photoUrls'],
+            'category' => [
+                'id' => $validated['category']['id'] ?? null,
+                'name' => $validated['category']['name'] ?? null,
+            ],
+            'tags' => array_map(function ($tag) {
+                return [
+                    'id' => $tag['id'] ?? null,
+                    'name' => $tag['name'] ?? null,
+                ];
+            }, $validated['tags'] ?? []),
+            'status' => $validated['status'] ?? null,
+        ];
+
+
+        $response = Http::withHeaders([
+            'api_key' => config('services.petstore.api_key'),
+            'accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        ])->post('https://petstore.swagger.io/v2/pet', $data);
+
+
+        dd($response);
+
+        if ($response->status() == 302) {
+            // Log the redirect URL
+            \Log::info('Redirect URL: ' . $response->header('Location'));
+        }
+
+        if ($response->successful()) {
+            return redirect()->route('pets.index')->with('success', 'Pet created successfully.');
+        }
+
+        \Log::error('Failed to create pet', [
+            'data' => $data,
+            'response' => $response->body(),
+        ]);
+
+        return redirect()->route('pets.index')->with('error', 'Failed to create pet. Please try again.');
     }
 
 }
