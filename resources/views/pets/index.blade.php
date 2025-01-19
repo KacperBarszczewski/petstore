@@ -16,9 +16,9 @@
     <tbody>
         @foreach ($pets as $pet)
             <tr class="hover:bg-gray-100 border-b border-gray-300">
-                <td class="px-4 py-2 ">{{ $pet['id'] }}</td>
-                <td class="px-4 py-2">{{ $pet['name'] }}</td>
-                <td class="px-4 py-2">{{ $pet['status'] }}</td>
+                <td class="px-4 py-2 ">{{ $pet->id}}</td>
+                <td class="px-4 py-2">{{ $pet->name }}</td>
+                <td class="px-4 py-2">{{ $pet->status->value }}</td>
             </tr>
         @endforeach
     </tbody>

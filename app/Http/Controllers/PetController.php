@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use Http;
-use Illuminate\Http\Request;
+use App\Models\Pet;
+use App\Enums\PetStatus;
 
 class PetController extends Controller
 {
@@ -13,7 +14,16 @@ class PetController extends Controller
             'status' => 'available'
         ]);
 
-        $pets = $response->json();
+        $petsData = $response->json();
+
+        $pets = collect($petsData)->map(function ($data) {
+            return new Pet(
+                id: $data['id'],
+                name: $data['name'],
+                photoUrls: $data['photoUrls'],
+                status: PetStatus::from($data['status'])
+            );
+        });
 
         return view('pets.index',compact('pets'));
     }
