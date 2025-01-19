@@ -2,30 +2,53 @@
 
 namespace App\Http\Controllers;
 
-use Http;
+use Illuminate\Support\Facades\Http;
 use App\Models\Pet;
 use App\Enums\PetStatus;
+use App\Models\Category;
+use App\Models\Tag;
+
 
 class PetController extends Controller
 {
     public function index()
     {
         $response = Http::get('https://petstore.swagger.io/v2/pet/findByStatus', [
-            'status' => 'available'
+            'status' => 'available',
         ]);
 
         $petsData = $response->json();
 
+        if (!is_array($petsData)) {
+            return view('error');
+        }
+
         $pets = collect($petsData)->map(function ($data) {
+            $category = isset($data['category']) ? new Category(
+                id: $data['category']['id'] ?? null,
+                name: $data['category']['name'] ?? null
+            ) : null;
+
+            $tags = isset($data['tags']) ? collect($data['tags'])->map(function ($tag) {
+                return new Tag(
+                    id: $tag['id'] ?? null,
+                    name: $tag['name'] ?? null
+                );
+            })->toArray() : [];
+
+            $status = isset($data['status']) ? PetStatus::tryFrom($data['status']) : null;
+
             return new Pet(
-                id: $data['id'],
-                name: $data['name'],
-                photoUrls: $data['photoUrls'],
-                status: PetStatus::from($data['status'])
+                name: $data['name'] ?? '',
+                photoUrls: $data['photoUrls'] ?? [],
+                id: $data['id'] ?? null,
+                category: $category,
+                tags: $tags,
+                status: $status
             );
         });
 
-        return view('pets.index',compact('pets'));
+        return view('pets.index', compact('pets'));
     }
 
     public function create()

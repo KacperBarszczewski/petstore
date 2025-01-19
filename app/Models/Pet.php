@@ -3,15 +3,15 @@
 namespace App\Models;
 
 use App\Models\Category;
-use App\Models\Tag;
 use App\Enums\PetStatus;
+
 class Pet
 {
     public ?int $id;
     public string $name;
     public array $photoUrls;
     public ?Category $category;
-    public ?Tag $tags;
+    public ?array $tags;
     public ?PetStatus $status;
 
     public function __construct(
@@ -19,7 +19,7 @@ class Pet
         array $photoUrls,
         ?int $id = null,
         ?Category $category = null,
-        ?Tag $tags = null,
+        ?array $tags = null,
         ?PetStatus $status = null
     ) {
         $this->id = $id;
