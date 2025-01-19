@@ -37,11 +37,15 @@
                         {{ $tag->name }}
                     @endforeach
                 </td>
-                <td>
-                    Edytuj
+                <td class="px-4 py-2">
+                    <form action="{{ route('pets.edit', $pet->id) }}" method="GET">
+                        @csrf
+                        <button type="submit" class="bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded">
+                            Edytuj
+                        </button>
+                    </form>
                 </td>
                 <td class="px-4 py-2">
-                    <!-- Formularz usuwania -->
                     <form action="{{ route('pets.delete', $pet->id) }}" method="POST"
                         onsubmit="return confirm('Napewno chcesz usunąć zwierze?')">
                         @csrf

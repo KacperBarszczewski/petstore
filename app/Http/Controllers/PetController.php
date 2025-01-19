@@ -141,4 +141,100 @@ class PetController extends Controller
         return redirect()->route('pets.index')->with('error', 'Failed to create pet. Please try again.');
     }
 
+
+    public function edit($id)
+    {
+        if (!ctype_digit($id)) {
+            return redirect()->route('pets.index')->with('error', 'Nieprawidłowe ID zwierzęcia.');
+        }
+
+        $response = Http::get("https://petstore.swagger.io/v2/pet/{$id}");
+
+        if (!$response->successful()) {
+            return redirect()->route('pets.index')->with('error', 'Nie udało się pobrać danych zwierzęcia.');
+        }
+
+        $petData = $response->json();
+
+        $category = isset($petData['category']) ? new Category(
+            id: $petData['category']['id'] ?? null,
+            name: $petData['category']['name'] ?? null
+        ) : null;
+
+        $tags = isset($petData['tags']) ? collect($petData['tags'])->map(function ($tag) {
+            return new Tag(
+                id: $tag['id'] ?? null,
+                name: $tag['name'] ?? null
+            );
+        })->toArray() : [];
+
+        $status = isset($petData['status']) ? PetStatus::tryFrom($petData['status']) : null;
+
+        $pet = new Pet(
+            name: $petData['name'] ?? '',
+            photoUrls: $petData['photoUrls'] ?? [],
+            id: $petData['id'] ?? null,
+            category: $category,
+            tags: $tags,
+            status: $status
+        );
+
+        return view('pets.edit', compact('pet'));
+    }
+
+
+    public function update(Request $request, $id)
+    {
+        if (!ctype_digit($id)) {
+            return redirect()->route('pets.index')->with('error', 'Nieprawidłowe ID zwierzęcia.');
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'photoUrls' => 'required|array',
+            'photoUrls.*' => 'required|string',
+            'category.id' => 'nullable|integer',
+            'category.name' => 'nullable|string|max:255',
+            'tags' => 'nullable|array',
+            'tags.*.name' => 'nullable|string|max:255',
+            'status' => 'nullable|string|in:available,pending,sold',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('pets.edit', ['id' => $id])
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        $validated = $validator->validated();
+
+        $data = [
+            'id' => $id,
+            'name' => $validated['name'],
+            'photoUrls' => $validated['photoUrls'],
+            'category' => [
+                'id' => $validated['category']['id'] ?? null,
+                'name' => $validated['category']['name'] ?? null,
+            ],
+            'tags' => array_map(function ($tag) {
+                return [
+                    'name' => $tag['name'] ?? null,
+                ];
+            }, $validated['tags'] ?? []),
+            'status' => $validated['status'] ?? null,
+        ];
+
+        $response = Http::withHeaders([
+            'api_key' => config('services.petstore.api_key'),
+            'accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        ])->put("https://petstore.swagger.io/v2/pet", $data);
+
+        if ($response->successful()) {
+            return redirect()->route('pets.index')->with('success', 'Zwierzę zostało zaktualizowane.');
+        }
+
+        return redirect()->route('pets.index')->with('error', 'Nie udało się zaktualizować zwierzęcia. Spróbuj ponownie.');
+    }
+
 }
