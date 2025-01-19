@@ -49,10 +49,13 @@
     </div>
 
     <div>
-        <label for="tags" class="block text-sm font-medium text-gray-700">Tags</label>
-        <textarea name="tags[0][name]" id="tags" rows="1"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2"
-            placeholder="wpisz tag">{{ old('tags.0.name') }}</textarea>
+        <label for="tags" class="block text-sm font-medium text-gray-700">Tagi</label>
+        <div id="tags-container">
+            <input type="text" name="tags[0][name]"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2"
+                placeholder="Wpisz tag" value="{{ old('tags.0.name') }}">
+        </div>
+        <button type="button" class="text-blue-500" id="add-tag">Dodaj tag</button>
         @error('tags.*.name')
             <div class="text-red-500 text-sm">{{ $message }}</div>
         @enderror
