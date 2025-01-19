@@ -237,4 +237,53 @@ class PetController extends Controller
         return redirect()->route('pets.index')->with('error', 'Nie udało się zaktualizować zwierzęcia. Spróbuj ponownie.');
     }
 
+    public function show($id)
+    {
+
+        if (!ctype_digit($id)) {
+            return redirect()->route('pets.index')->with('error', 'Nieprawidłowe ID zwierzęcia.');
+        }
+
+
+        $response = Http::get("https://petstore.swagger.io/v2/pet/{$id}");
+
+
+        if (!$response->successful()) {
+            return redirect()->route('pets.index')->with('error', 'Nie udało się pobrać danych zwierzęcia.');
+        }
+
+
+        $petData = $response->json();
+
+
+        $category = isset($petData['category']) ? new Category(
+            id: $petData['category']['id'] ?? null,
+            name: $petData['category']['name'] ?? null
+        ) : null;
+
+        $tags = isset($petData['tags']) ? collect($petData['tags'])->map(function ($tag) {
+            return new Tag(
+                id: $tag['id'] ?? null,
+                name: $tag['name'] ?? null
+            );
+        })->toArray() : [];
+
+
+        $status = isset($petData['status']) ? PetStatus::tryFrom($petData['status']) : null;
+
+
+        $pet = new Pet(
+            name: $petData['name'] ?? '',
+            photoUrls: $petData['photoUrls'] ?? [],
+            id: $petData['id'] ?? null,
+            category: $category,
+            tags: $tags,
+            status: $status
+        );
+
+
+        return view('pets.show', compact('pet'));
+    }
+
+
 }

@@ -20,7 +20,7 @@
     </thead>
     <tbody>
         @foreach ($pets as $pet)
-            <tr class="hover:bg-gray-100 border-b border-gray-300">
+            <tr class="hover:bg-gray-100 hover:cursor-pointer border-b border-gray-300" onclick="window.location='{{ route('pets.show', $pet->id) }}'">
                 <td class="px-4 py-2 ">{{ $pet->id}}</td>
                 <td class="px-4 py-2 ">
                     @if(!empty($pet->photoUrls) && isset($pet->photoUrls[0]))
