@@ -60,7 +60,7 @@ class PetController extends Controller
     {
         $response = Http::withHeaders([
             'api_key' => 'special-key',
-        ])->delete('https://petstore.swagger.io/v2/pet/' . $id);
+        ])->delete("https://petstore.swagger.io/v2/pet/{$id}");
 
 
         if ($response->successful()) {

@@ -3,7 +3,7 @@
 
 @section('content')
 
-<h1 class="mt-10">Tabela zwierząt</h1>
+<h1 class="mt-10 font-extrabold text-4xl underline shadow-lg">Tabela zwierząt</h1>
 
 <table class="my-10 bg-gray-200 border border-gray-300 shadow-md rounded-lg text-center">
     <thead class="bg-gray-300 text-gray-700 font-semibold">

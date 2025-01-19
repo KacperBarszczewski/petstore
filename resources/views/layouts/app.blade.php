@@ -35,13 +35,25 @@
                 </a>
             </div>
             <div class="justify-end">
-                <a href="{{route('pets.create')}}" class="hover:underline rounded-full bg-green-300 p-3 hover:bg-green-400">Dodaj zwierzaka</a>
+                <a href="{{route('pets.create')}}"
+                    class="hover:underline rounded-full bg-green-300 p-3 hover:bg-green-400">Dodaj zwierzaka</a>
             </div>
 
         </nav>
     </header>
 
     <div class="flex-grow flex flex-col items-center justify-center">
+        @if (session('success'))
+            <div id="alert" class="my-4 p-4 text-sm text-white bg-green-500 rounded-lg shadow-md transition-opacity duration-500 fixed top-0 left-1/4">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div id="alert" class="my-4 p-4 text-sm text-white bg-red-500 rounded-lg shadow-md transition-opacity duration-500">
+                {{ session('error') }}
+            </div>
+        @endif
         @yield('content')
     </div>
 
